@@ -1,3 +1,19 @@
+# ===== 말뭉치 원본 — 절대 커밋 금지 =====
+data/raw/
+data/interim/
+*.json.gz
+*.zip
+
+# 대용량 산출물 (수십 MB 넘으면 주석 해제)
+# data/processed/
+
+# 환경
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
