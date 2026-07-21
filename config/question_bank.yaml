@@ -1,0 +1,135 @@
+# 언어 나이 진단기 - 질문 뱅크
+#
+# type: choice  -> 객관식. 각 option은 word_lifecycle.parquet에 실존해야 하는 word를 직접 지정한다.
+# type: text    -> 서술형. 자유 입력 텍스트를 matcher.py가 명사 추출해 word_lifecycle과 대조한다.
+#
+# implicit_age  -> 이 질문이 묻는 시절의 암묵 나이(추정_출생연도 = peak_year - implicit_age)
+# confidence    -> 이 질문 유형이 갖는 신뢰도. 객관식(단어 확정)이 서술형(추출 오차 존재)보다 높다.
+#
+# 회의록 기준: 객관식 5~6문항, 서술형 3문항. implicit_age 예시 -
+#   어릴 때 쓰던 물건 ≈ 9세 / 학창 시절 표현 ≈ 15세 / 기억나는 유행어 ≈ 17세
+
+questions:
+  - id: q1
+    type: choice
+    category: childhood_object
+    implicit_age: 9
+    confidence: 0.9
+    text: "어릴 때 가장 많이 썼던 물건은?"
+    options:
+      - label: "삐삐"
+        word: "삐삐"
+      - label: "시티폰"
+        word: "시티폰"
+      - label: "MP3 플레이어"
+        word: "엠피쓰리"
+      - label: "폴더폰"
+        word: "폴더폰"
+      - label: "스마트폰"
+        word: "스마트폰"
+
+  - id: q2
+    type: choice
+    category: childhood_trend
+    implicit_age: 9
+    confidence: 0.8
+    text: "초등학생 때 가장 열심히 했던 것은?"
+    options:
+      - label: "다마고치 키우기"
+        word: "다마고치"
+      - label: "미니홈피 꾸미기"
+        word: "미니홈피"
+      - label: "마인크래프트"
+        word: "마인크래프트"
+      - label: "틱톡 챌린지"
+        word: "챌린지"
+
+  - id: q3
+    type: choice
+    category: teen_fashion
+    implicit_age: 15
+    confidence: 0.8
+    text: "학창 시절 유행했던 패션/아이템은?"
+    options:
+      - label: "스키니진"
+        word: "스키니진"
+      - label: "크롭티"
+        word: "크롭티"
+      - label: "롱패딩"
+        word: "롱패딩"
+      - label: "슬리퍼(어그/크록스)"
+        word: "슬리퍼"
+
+  - id: q4
+    type: choice
+    category: teen_messenger
+    implicit_age: 15
+    confidence: 0.85
+    text: "학창 시절 가장 즐겨 쓰던 메신저/SNS는?"
+    options:
+      - label: "세이클럽"
+        word: "세이클럽"
+      - label: "네이트온"
+        word: "네이트온"
+      - label: "카카오톡"
+        word: "카카오톡"
+      - label: "인스타그램"
+        word: "인스타그램"
+
+  - id: q5
+    type: choice
+    category: slang
+    implicit_age: 17
+    confidence: 0.75
+    text: "가장 먼저 떠오르는 유행어/신조어는?"
+    options:
+      - label: "안습"
+        word: "안습"
+      - label: "즐"
+        word: "즐"
+      - label: "인싸"
+        word: "인싸"
+      - label: "오운완"
+        word: "오운완"
+      - label: "갓생"
+        word: "갓생"
+
+  - id: q6
+    type: choice
+    category: current_interest
+    implicit_age: 17
+    confidence: 0.7
+    text: "요즘 가장 자주 쓰거나 관심 있는 단어는?"
+    options:
+      - label: "챗지피티"
+        word: "챗지피티"
+      - label: "메타버스"
+        word: "메타버스"
+      - label: "유튜브"
+        word: "유튜브"
+      - label: "숏폼"
+        word: "숏폼"
+
+  - id: q7
+    type: text
+    category: childhood_object
+    implicit_age: 9
+    confidence: 0.6
+    text: "어릴 때 자주 갖고 놀던 물건이나 좋아했던 것을 자유롭게 적어보세요."
+    placeholder: "예: 딱지치기, 다마고치, 문방구 뽑기..."
+
+  - id: q8
+    type: text
+    category: teen_expression
+    implicit_age: 15
+    confidence: 0.6
+    text: "학창 시절 자주 쓰던 표현이나 즐겨 하던 것을 적어보세요."
+    placeholder: "예: 야자, 미니홈피, 버디버디..."
+
+  - id: q9
+    type: text
+    category: slang
+    implicit_age: 17
+    confidence: 0.55
+    text: "최근 기억에 남는 유행어나 신조어를 적어보세요."
+    placeholder: "예: 갓생, 오운완, 인싸..."
