@@ -2,15 +2,15 @@
 charts.py
 ==========
 세 가지 시각화를 만든다.
-    1) streamgraph()       전체 단어의 생애주기를 스트림그래프로
-    2) my_words_chart()    사용자가 답한 단어들이 추정에 기여한 정도
-    3) life_stage_bands()  추정 출생연도를 기준으로 인생 시기를 연도축에 배치
+    1) streamgraph()            전체 단어의 생애주기를 스트림그래프로
+    2) my_words_chart()         사용자가 답한 단어들이 추정에 기여한 정도
+    3) word_lifecycle_curves()  단어(최대 3개)를 검색했을 때 그 단어들만의 생애주기 곡선
 
 주의: word_lifecycle.parquet는 파이프라인과 앱이 합의한 유일한 소통 파일이며,
 연도별 원시 시계열(연도x단어 행렬)은 포함하지 않는다(용량 문제 + 스키마 단순화).
-따라서 streamgraph는 birth_year/peak_year/death_year/peak_value/sharpness만으로
-'그럴듯한' 생애주기 곡선을 재구성한 근사치다. 실제 연도별 빈도 곡선이 아니라
-생애주기의 형태를 보여주기 위한 시각화임을 화면에 함께 안내한다.
+따라서 streamgraph/word_lifecycle_curves는 birth_year/peak_year/death_year/peak_value/
+sharpness만으로 '그럴듯한' 생애주기 곡선을 재구성한 근사치다. 실제 연도별 빈도 곡선이
+아니라 생애주기의 형태를 보여주기 위한 시각화임을 화면에 함께 안내한다.
 """
 
 from __future__ import annotations
@@ -18,16 +18,6 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-
-LIFE_STAGES = [
-    ("유아기", 0, 6, "#FDE68A"),
-    ("아동기", 7, 12, "#FCA5A5"),
-    ("청소년기", 13, 18, "#93C5FD"),
-    ("청년기", 19, 29, "#6EE7B7"),
-    ("장년기", 30, 49, "#C4B5FD"),
-    ("중장년기", 50, 64, "#F9A8D4"),
-    ("노년기", 65, 100, "#D1D5DB"),
-]
 
 
 def _reconstruct_series(row: pd.Series, years: list[int]) -> np.ndarray:
@@ -131,38 +121,59 @@ def my_words_chart(evidence_table: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def life_stage_bands(estimated_birth_year: int, low: int, high: int, current_year: int) -> go.Figure:
+_CURVE_COLORS = [
+    ("#F97316", "rgba(249,115,22,0.18)"),
+    ("#3B82F6", "rgba(59,130,246,0.18)"),
+    ("#10B981", "rgba(16,185,129,0.18)"),
+]
+
+
+def word_lifecycle_curves(lifecycle_df: pd.DataFrame, words: list[str], current_year: int) -> go.Figure | None:
+    """단어 최대 3개까지의 등장~정점~소멸 곡선을 한 그래프에 겹쳐 보여준다.
+
+    사전에 없는 단어는 건너뛴다. 하나도 못 찾으면 None을 반환한다 (앱에서 안내 메시지 처리).
+    """
     fig = go.Figure()
+    found_any = False
 
-    for name, age_start, age_end, color in LIFE_STAGES:
-        year_start = estimated_birth_year + age_start
-        year_end = estimated_birth_year + age_end
-        if year_start > current_year:
+    for i, word in enumerate(words[:3]):
+        matches = lifecycle_df[lifecycle_df["word"] == word]
+        if matches.empty:
             continue
-        year_end = min(year_end, current_year)
-        fig.add_trace(go.Bar(
-            x=[year_end - year_start],
-            base=[year_start],
-            y=["인생 시기"],
-            orientation="h",
-            marker_color=color,
-            name=name,
-            text=name,
-            textposition="inside",
-            hovertemplate=f"{name} ({age_start}~{age_end}세) · {year_start}~{year_end}년<extra></extra>",
-        ))
 
-    # 25~75 백분위 불확실성 구간을 얇은 마커로 함께 표시
-    fig.add_vrect(x0=low, x1=high, fillcolor="black", opacity=0.08, line_width=0)
-    fig.add_vline(x=estimated_birth_year, line_dash="dash", line_color="black")
+        row = matches.iloc[0]
+        birth_year = int(row["birth_year"])
+        peak_year = int(row["peak_year"])
+        death_year = row["death_year"]
+        end_year = int(death_year) if pd.notna(death_year) else current_year
+        end_year = max(end_year, birth_year)
+
+        years = list(range(birth_year, end_year + 1))
+        values = _reconstruct_series(row, years)
+        line_color, fill_color = _CURVE_COLORS[i % len(_CURVE_COLORS)]
+
+        fig.add_trace(go.Scatter(
+            x=years,
+            y=values,
+            mode="lines",
+            name=word,
+            line=dict(width=2, color=line_color),
+            fill="tozeroy",
+            fillcolor=fill_color,
+            hovertemplate=f"{word}<br>연도 %{{x}}<br>상대 사용량(근사) %{{y:.1f}}<extra></extra>",
+        ))
+        fig.add_vline(x=peak_year, line_dash="dash", line_color=line_color)
+        found_any = True
+
+    if not found_any:
+        return None
 
     fig.update_layout(
-        title=f"추정 출생연도({estimated_birth_year}년) 기준 인생 시기 · 음영 = 25~75% 추정 범위({low}~{high}년)",
-        barmode="stack",
-        showlegend=True,
+        title="검색한 단어의 생애주기" if len(words) == 1 else "검색한 단어들의 생애주기 비교",
         xaxis_title="연도",
-        yaxis=dict(showticklabels=False, title=""),
+        yaxis=dict(title="상대 사용량(근사)", showticklabels=False),
+        legend=dict(orientation="h", y=1.15),
         margin=dict(l=10, r=10, t=50, b=10),
-        height=220,
+        height=360,
     )
     return fig
