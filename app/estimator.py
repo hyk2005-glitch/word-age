@@ -124,3 +124,28 @@ def estimate(
         language_age=language_age,
         evidence_table=evidence_table,
     )
+
+def recommend_generation_words(
+    lifecycle_df: pd.DataFrame,
+    estimated_birth_year: int,
+    exclude_words: set[str],
+    n: int = 6,
+    age_low: int = 5,
+    age_high: int = 25,
+) -> pd.DataFrame:
+    """추정 출생연도를 기준으로, 그 세대가 한창 자랄 나이(age_low~age_high세)에
+    정점을 찍었던 단어 중 사용자가 이미 답하지 않은 단어를 추천한다.
+
+    sharpness(시대를 강하게 가리키는 정도) 순으로 정렬해 상위 n개를 반환한다.
+    후보가 없으면 빈 DataFrame을 반환한다.
+    """
+    year_low = estimated_birth_year + age_low
+    year_high = estimated_birth_year + age_high
+
+    candidates = lifecycle_df[
+        (lifecycle_df["peak_year"] >= year_low)
+        & (lifecycle_df["peak_year"] <= year_high)
+        & (~lifecycle_df["word"].isin(exclude_words))
+    ]
+
+    return candidates.sort_values(["sharpness", "total_freq"], ascending=False).head(n)

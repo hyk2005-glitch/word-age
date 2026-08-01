@@ -21,7 +21,7 @@ def load_question_bank(path: pathlib.Path) -> dict:
 def render_questions(question_bank: dict) -> list[dict]:
     """각 질문을 st 위젯으로 그리고, 답변을 모아서 반환한다.
 
-    반환 형식: [{id, type, implicit_age, confidence, word=None, raw_text=None}, ...]
+    반환 형식: [{id, type, implicit_age, confidence, word=None, label=None, raw_text=None}, ...]
     선택하지 않은 객관식이나 빈 서술형은 결과 목록에서 제외되지 않고 그대로 담기며,
     이후 app.py에서 word/raw_text가 비어있는 항목을 걸러낸다.
     """
@@ -43,6 +43,7 @@ def render_questions(question_bank: dict) -> list[dict]:
             "implicit_age": q["implicit_age"],
             "confidence": q["confidence"],
             "word": word,
+            "label": choice,
             "raw_text": None,
         })
 
@@ -57,6 +58,7 @@ def render_questions(question_bank: dict) -> list[dict]:
             "implicit_age": q["implicit_age"],
             "confidence": q["confidence"],
             "word": None,
+            "label": None,
             "raw_text": text,
         })
 
