@@ -8,6 +8,13 @@
 #
 # 회의록 기준: 객관식 5~6문항, 서술형 3문항. implicit_age 예시 -
 #   어릴 때 쓰던 물건 ≈ 9세 / 학창 시절 표현 ≈ 15세 / 기억나는 유행어 ≈ 17세
+#
+# 주의: 옵션 word는 신문 말뭉치(뉴스 텍스트) 기반 실제 파이프라인 산출물과 대조해 골랐다.
+# 뉴스 말뭉치 특성상 순수 인터넷 은어(오운완, 미니홈피, 즐 등)는 total_freq가 0이거나
+# 극히 낮아 word_lifecycle.parquet에 아예 없거나 신뢰하기 어렵다. 옵션을 추가/교체할 때는
+# 반드시 word_lifecycle.parquet에서 해당 word의 존재 여부와 total_freq(표본 크기),
+# sharpness(시대 특정력)를 확인할 것 - freq가 너무 낮으면(대략 20 미만) 추정치가 노이즈에
+# 가깝고, sharpness가 낮으면(대략 1.5 미만) 특정 시기를 가리키는 힘이 약하다.
 
 questions:
   - id: q1
@@ -17,16 +24,14 @@ questions:
     confidence: 0.9
     text: "어릴 때 가장 많이 썼던 물건은?"
     options:
-      - label: "삐삐"
-        word: "삐삐"
-      - label: "시티폰"
-        word: "시티폰"
-      - label: "MP3 플레이어"
-        word: "엠피쓰리"
-      - label: "폴더폰"
-        word: "폴더폰"
-      - label: "스마트폰"
-        word: "스마트폰"
+      - label: "넷북/미니노트북"
+        word: "넷북"
+      - label: "아이팟(MP3 플레이어)"
+        word: "아이팟"
+      - label: "갤럭시 스마트폰"
+        word: "갤럭시"
+      - label: "에어팟"
+        word: "에어팟"
 
   - id: q2
     type: choice
@@ -37,12 +42,12 @@ questions:
     options:
       - label: "다마고치 키우기"
         word: "다마고치"
-      - label: "미니홈피 꾸미기"
-        word: "미니홈피"
+      - label: "싸이월드 미니홈피 꾸미기"
+        word: "싸이월드"
       - label: "마인크래프트"
         word: "마인크래프트"
-      - label: "틱톡 챌린지"
-        word: "챌린지"
+      - label: "포켓몬빵 스티커 모으기"
+        word: "포켓몬빵"
 
   - id: q3
     type: choice
@@ -53,12 +58,12 @@ questions:
     options:
       - label: "스키니진"
         word: "스키니진"
-      - label: "크롭티"
-        word: "크롭티"
+      - label: "크록스"
+        word: "크록스"
       - label: "롱패딩"
         word: "롱패딩"
-      - label: "슬리퍼(어그/크록스)"
-        word: "슬리퍼"
+      - label: "크롭티"
+        word: "크롭티"
 
   - id: q4
     type: choice
@@ -67,10 +72,10 @@ questions:
     confidence: 0.85
     text: "학창 시절 가장 즐겨 쓰던 메신저/SNS는?"
     options:
-      - label: "세이클럽"
-        word: "세이클럽"
-      - label: "네이트온"
-        word: "네이트온"
+      - label: "버디버디"
+        word: "버디버디"
+      - label: "트위터"
+        word: "트위터"
       - label: "카카오톡"
         word: "카카오톡"
       - label: "인스타그램"
@@ -83,14 +88,12 @@ questions:
     confidence: 0.75
     text: "가장 먼저 떠오르는 유행어/신조어는?"
     options:
-      - label: "안습"
-        word: "안습"
-      - label: "즐"
-        word: "즐"
-      - label: "인싸"
-        word: "인싸"
-      - label: "오운완"
-        word: "오운완"
+      - label: "얼짱"
+        word: "얼짱"
+      - label: "흙수저"
+        word: "흙수저"
+      - label: "핵인싸"
+        word: "핵인싸"
       - label: "갓생"
         word: "갓생"
 
@@ -124,7 +127,7 @@ questions:
     implicit_age: 15
     confidence: 0.6
     text: "학창 시절 자주 쓰던 표현이나 즐겨 하던 것을 적어보세요."
-    placeholder: "예: 야자, 미니홈피, 버디버디..."
+    placeholder: "예: 야자, 싸이월드, 버디버디..."
 
   - id: q9
     type: text
@@ -132,4 +135,4 @@ questions:
     implicit_age: 17
     confidence: 0.55
     text: "최근 기억에 남는 유행어나 신조어를 적어보세요."
-    placeholder: "예: 갓생, 오운완, 인싸..."
+    placeholder: "예: 갓생, 핵인싸, 흙수저..."

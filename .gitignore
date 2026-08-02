@@ -1,6 +1,11 @@
 # ===== 말뭉치 원본 — 절대 커밋 금지 =====
 data/raw/
 data/interim/
+# 01_extract.py 산출물: 원문 문장을 그대로 담고 있어 저작권상 원본과 동일하게 취급 (재배포 금지)
+data/extracted/
+# 02_tokenize.py / 03_matrix.py 중간 산출물: data/word_lifecycle.*에서 재생성 가능하므로 커밋 대상 아님
+data/tokenized/
+data/matrix/
 *.json.gz
 *.zip
 

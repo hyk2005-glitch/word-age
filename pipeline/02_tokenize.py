@@ -51,6 +51,12 @@ def _read_year_sentences(in_dir: pathlib.Path, year: int) -> pd.DataFrame | None
     return None
 
 
+def _total_path(out_dir: pathlib.Path, year: int) -> pathlib.Path:
+    """연도별 총 어절수를 개별 저장하는 사이드카 파일. 중단 후 재개해도 유실되지 않도록
+    year_totals.parquet(전체 취합본)와 별개로 연도마다 즉시 기록한다."""
+    return out_dir / f"{year}_total.txt"
+
+
 def _get_kiwi():
     try:
         from kiwipiepy import Kiwi
@@ -102,6 +108,14 @@ def main() -> None:
     t0 = time.time()
 
     for year in years:
+        out_path = args.out_dir / f"{year}_counts.parquet"
+        out_path_csv = args.out_dir / f"{year}_counts.csv"
+        total_path = _total_path(args.out_dir, year)
+        if (out_path.exists() or out_path_csv.exists()) and total_path.exists():
+            year_totals[year] = int(total_path.read_text(encoding="utf-8").strip())
+            print(f"[{year}] 이미 처리됨(총 어절수 포함) -> 건너뜀")
+            continue
+
         df = _read_year_sentences(args.in_dir, year)
         if df is None or df.empty:
             continue
@@ -111,6 +125,7 @@ def main() -> None:
 
         counts, total_tokens = tokenize_year(kiwi, sample, stopwords)
         year_totals[year] = total_tokens
+        total_path.write_text(str(total_tokens), encoding="utf-8")
 
         out_path = args.out_dir / f"{year}_counts.parquet"
         counts_df = counts.rename_axis("word").reset_index()
